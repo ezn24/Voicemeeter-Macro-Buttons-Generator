@@ -1,1049 +1,291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./index.css"
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voicemeeter Command Generator · Single-view</title>
+  <meta name="description" content="Single-view, tri-state menus, real-time Voicemeeter command preview/exports with language switch">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="header">
-        <h1>Voicemeeter MacroButton Command Generator</h1>
-        <p>Create powerful macro commands for all Voicemeeter versions</p>
-    </div>
-
-    <div class="version-selector">
-        <button class="version-btn active" data-version="standard">
-            Voicemeeter Standard
-            <br><small>3 Strips, 2 Buses</small>
-        </button>
-        <button class="version-btn" data-version="banana">
-            Voicemeeter Banana
-            <br><small>5 Strips, 5 Buses</small>
-        </button>
-        <button class="version-btn" data-version="potato">
-            Voicemeeter Potato
-            <br><small>8 Strips, 8 Buses</small>
-        </button>
-    </div>
-
-    <div class="container">
-        <!-- Voicemeeter Visual Interface -->
-        <div class="voicemeeter-visual">
-            <h2 class="vm-title">Voicemeeter Interface</h2>
-            
-            <h3 style="color: #4CAF50; margin-bottom: 10px;">Input Strips</h3>
-            <div class="strips-container" id="stripsContainer">
-                <!-- Strips will be generated dynamically -->
-            </div>
-
-            <h3 style="color: #2196F3; margin-bottom: 10px;">Output Buses</h3>
-            <div class="buses-container" id="busesContainer">
-                <!-- Buses will be generated dynamically -->
-            </div>
-
-            <div class="quick-actions">
-                <div class="quick-action" onclick="quickAction('muteAll')">
-                    🔇
-                    <span>Mute All</span>
-                </div>
-                <div class="quick-action" onclick="quickAction('unmuteAll')">
-                    🔊
-                    <span>Unmute All</span>
-                </div>
-                <div class="quick-action" onclick="quickAction('resetGains')">
-                    ↻
-                    <span>Reset Gains</span>
-                </div>
-                <div class="quick-action" onclick="quickAction('restart')">
-                    ⚡
-                    <span>Restart Engine</span>
-                </div>
-            </div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">🎚️</div>
+        <div class="titles">
+          <h1 id="t-title">Voicemeeter Command Generator</h1>
+          <div class="subtitle" id="t-subtitle">Tri-state menus + real-time preview</div>
         </div>
+      </div>
+      <div class="controls">
+        <label class="ver-label" id="t-version-label">Version:</label>
+        <select id="versionSelect" class="select">
+          <option value="standard">Voicemeeter (Standard)</option>
+          <option value="banana">Voicemeeter Banana</option>
+          <option value="potato">Voicemeeter Potato</option>
+        </select>
+        <label class="ver-label" id="t-lang-label">Language:</label>
+        <select id="langSelect" class="select">
+          <option value="en">English</option>
+          <option value="zh">繁體中文</option>
+        </select>
+        <button id="copyBtn" class="ghost">Copy</button>
+        <button id="resetBtn" class="danger">Reset All</button>
+        <button id="helpBtn" class="ghost">Help</button>
+      </div>
+    </header>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-            <h2 class="config-title">Command Configuration</h2>
+    <main class="content">
+      <section class="left-pane">
+        <div class="panel">
+          <div class="panel-title" id="t-panel-title">Visual Panel (set on the left, see diff on the right)</div>
+          <div class="panel-subtitle" id="panelSubtitle"></div>
 
-            <div class="param-group">
-                <div class="param-group-title" onclick="toggleGroup(this)">
-                    Basic Controls
-                </div>
-                <div class="param-content">
-                    <div class="form-group">
-                        <label>Target:</label>
-                        <select class="form-control" id="targetSelect" onchange="updateTarget()">
-                            <option value="">Select Strip/Bus</option>
-                            <optgroup label="Strips" id="stripOptions">
-                            </optgroup>
-                            <optgroup label="Buses" id="busOptions">
-                            </optgroup>
-                        </select>
-                    </div>
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="strips" id="t-tab-strips">Strips (Inputs)</button>
+            <button class="tab" data-tab="buses" id="t-tab-buses">Buses (Outputs)</button>
+            <button class="tab" data-tab="quick" id="t-tab-quick">Quick Commands / Snippets</button>
+            <button class="tab" data-tab="system" id="t-tab-system">System / VBAN / Recorder / Patch</button>
+          </div>
 
-                    <div class="form-group">
-                        <label>Parameter:</label>
-                        <select class="form-control" id="paramSelect" onchange="updateParam()">
-                            <option value="">Select Parameter</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="valueGroup" style="display: none;">
-                        <label id="valueLabel">Value:</label>
-                        <input type="text" class="form-control" id="valueInput" placeholder="Enter value" oninput="updateCommand()">
-                        <input type="range" id="rangeInput" style="display: none; margin-top: 10px;" oninput="updateRangeValue()">
-                        <span id="rangeValue" style="color: #4CAF50; margin-left: 10px;"></span>
-                    </div>
-                </div>
+          <div class="tabpane active" id="tab-strips">
+            <div class="selector-row">
+              <label id="t-select-strip">Select Strip:</label>
+              <select id="stripIndexSelect" class="select" title="Index"></select>
             </div>
+            <div id="stripSingle"></div>
+          </div>
 
-            <div class="param-group">
-                <div class="param-group-title" onclick="toggleGroup(this)">
-                    Button Configuration
-                </div>
-                <div class="param-content">
-                    <div class="form-group">
-                        <label>Button ID:</label>
-                        <input type="number" class="form-control" id="buttonId" min="0" max="79" value="0" onchange="updateCommand()">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Button Color:</label>
-                        <div class="color-buttons">
-                            <div class="color-btn color-1" data-color="1" onclick="selectColor(1)"></div>
-                            <div class="color-btn color-2" data-color="2" onclick="selectColor(2)"></div>
-                            <div class="color-btn color-3" data-color="3" onclick="selectColor(3)"></div>
-                            <div class="color-btn color-4" data-color="4" onclick="selectColor(4)"></div>
-                            <div class="color-btn color-5" data-color="5" onclick="selectColor(5)"></div>
-                            <div class="color-btn color-6" data-color="6" onclick="selectColor(6)"></div>
-                            <div class="color-btn color-7" data-color="7" onclick="selectColor(7)"></div>
-                            <div class="color-btn color-8" data-color="8" onclick="selectColor(8)"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="triggerEnabled" onchange="updateCommand()">
-                            Enable Audio Trigger
-                        </label>
-                    </div>
-                </div>
+          <div class="tabpane" id="tab-buses">
+            <div class="selector-row">
+              <label id="t-select-bus">Select Bus:</label>
+              <select id="busIndexSelect" class="select" title="Index"></select>
             </div>
+            <div id="busSingle"></div>
+          </div>
 
-            <div class="param-group">
-                <div class="param-group-title" onclick="toggleGroup(this)">
-                    Special Commands
+          <div class="tabpane" id="tab-quick">
+            <div class="quick-grid">
+              <div class="quick-card">
+                <h3 id="t-q-mute-title">Mute / Unmute / Toggle</h3>
+                <div class="row">
+                  <label id="t-q-strip-index">Strip Index</label>
+                  <input type="number" id="qcMuteStripIndex" min="0" value="0">
                 </div>
-                <div class="param-content">
-                    <div class="form-group">
-                        <label>Command Type:</label>
-                        <select class="form-control" id="specialCommand" onchange="updateSpecialCommand()">
-                            <option value="">Select Command</option>
-                            <option value="restart">Restart Audio Engine</option>
-                            <option value="shutdown">Shutdown Voicemeeter</option>
-                            <option value="show">Show Voicemeeter</option>
-                            <option value="reset">Reset Configuration</option>
-                            <option value="eject">Eject Cassette</option>
-                            <option value="load">Load Configuration</option>
-                            <option value="save">Save Configuration</option>
-                            <option value="lock">Lock/Unlock GUI</option>
-                        </select>
-                    </div>
+                <div class="row">
+                  <label id="t-q-action">Action</label>
+                  <select id="qcMuteAction">
+                    <option value="on">ON (=1)</option>
+                    <option value="off">OFF (=0)</option>
+                    <option value="toggle">TOGGLE (+=1)</option>
+                  </select>
+                </div>
+                <button class="primary" id="qcMuteAdd">Add</button>
+                <pre class="preview" id="qcMutePreview"></pre>
+              </div>
 
-                    <div class="form-group" id="filePathGroup" style="display: none;">
-                        <label>File Path:</label>
-                        <input type="text" class="form-control" id="filePath" placeholder="C:\Path\To\File.xml" onchange="updateCommand()">
-                    </div>
+              <div class="quick-card">
+                <h3 id="t-q-gain-title">Strip Gain / Fade</h3>
+                <div class="row">
+                  <label id="t-q-strip-index-2">Strip Index</label>
+                  <input type="number" id="qcGainStripIndex" min="-1" value="0">
                 </div>
+                <div class="row">
+                  <label id="t-q-gain-db">Target Gain (dB)</label>
+                  <input type="number" id="qcGainDb" step="0.1" min="-60" max="12" value="-6">
+                </div>
+                <div class="row">
+                  <label id="t-q-gain-ms">Fade Time (ms)</label>
+                  <input type="number" id="qcGainMs" min="0" value="1000">
+                </div>
+                <button class="primary" id="qcGainAdd">Add</button>
+                <pre class="preview" id="qcGainPreview"></pre>
+              </div>
+
+              <div class="quick-card">
+                <h3 id="t-q-assign-title">Assign to Bus (A1..A5 / B1..B3)</h3>
+                <div class="row">
+                  <label id="t-q-strip-index-3">Strip Index</label>
+                  <input type="number" id="qcAssignStripIndex" min="0" value="0">
+                </div>
+                <div class="row">
+                  <label id="t-q-target">Target</label>
+                  <select id="qcAssignTarget">
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="A3">A3</option>
+                    <option value="A4">A4</option>
+                    <option value="A5">A5</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="B3">B3</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <label id="t-q-value">Value</label>
+                  <select id="qcAssignValue">
+                    <option value="1">1 (ON)</option>
+                    <option value="0">0 (OFF)</option>
+                  </select>
+                </div>
+                <button class="primary" id="qcAssignAdd">Add</button>
+                <pre class="preview" id="qcAssignPreview"></pre>
+              </div>
+
+              <div class="quick-card">
+                <h3 id="t-q-cmd-title">Special Commands (Command.*)</h3>
+                <div class="row">
+                  <label id="t-q-cmd">Command</label>
+                  <select id="qcCmdName">
+                    <option value="Restart">Restart</option>
+                    <option value="Shutdown">Shutdown</option>
+                    <option value="Reset">Reset</option>
+                    <option value="Show">Show</option>
+                    <option value="Lock">Lock</option>
+                    <option value="Eject">Eject</option>
+                  </select>
+                </div>
+                <div class="row">
+                  <label id="t-q-valpath">Value / Path</label>
+                  <input type="text" id="qcCmdValue" placeholder='e.g. 1 or "C:\\My Documents\\VMConfig1.xml"'>
+                </div>
+                <button class="primary" id="qcCmdAdd">Add</button>
+                <pre class="preview" id="qcCmdPreview"></pre>
+              </div>
+
+              <div class="quick-card">
+                <h3 id="t-q-wait-title">Wait Sequence (ms)</h3>
+                <div class="row">
+                  <label id="t-q-wait">Wait Time</label>
+                  <input type="number" id="qcWaitMs" min="0" value="1000">
+                </div>
+                <button class="primary" id="qcWaitAdd">Add</button>
+                <pre class="preview" id="qcWaitPreview"></pre>
+              </div>
             </div>
+          </div>
 
-            <div class="advanced-toggle">
-                <span>Advanced Features</span>
-                <div class="toggle-switch" id="advancedToggle" onclick="toggleAdvanced()">
-                    <div class="toggle-slider"></div>
+          <div class="tabpane" id="tab-system">
+            <div class="sys-grid">
+              <div class="sys-card">
+                <h3>System Settings</h3>
+                <div class="row">
+                  <label>Option.sr</label>
+                  <select id="optSr">
+                    <option>44.1</option><option selected>48</option><option>88.2</option><option>96</option><option>176.4</option><option>192</option>
+                  </select>
+                  <button class="mini ghost" data-insert="Option.sr {{VAL}} kHz">Add</button>
                 </div>
-            </div>
-
-            <div class="advanced-features" id="advancedFeatures">
-                <div class="param-group">
-                    <div class="param-group-title">
-                        Sequenced Commands
-                    </div>
-                    <div class="param-content">
-                        <div class="form-group">
-                            <label>Add Wait Command:</label>
-                            <input type="number" class="form-control" id="waitTime" placeholder="Time in ms" min="0" max="120000">
-                            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addWaitCommand()">Add Wait</button>
-                        </div>
-            
-                        <div class="form-group">
-                            <label>Command Sequence:</label>
-                            <textarea class="form-control" id="sequenceText" rows="5" placeholder="Build your command sequence here"></textarea>
-                        </div>
-                    </div>
+                <div class="row">
+                  <label>Option.ASIOsr</label>
+                  <select id="optAsiosr">
+                    <option value="0">0 (default)</option>
+                    <option value="1">1 (preferred)</option>
+                  </select>
+                  <button class="mini ghost" data-insert="Option.ASIOsr = {{VAL}};">Add</button>
                 </div>
-            
-                <div class="param-group">
-                    <div class="param-group-title">
-                        VBAN Configuration
-                    </div>
-                    <div class="param-content">
-                        <div class="form-group">
-                            <label>Stream Type:</label>
-                            <select class="form-control" id="vbanType">
-                                <option value="instream">Input Stream</option>
-                                <option value="outstream">Output Stream</option>
-                            </select>
-                        </div>
-            
-                        <div class="form-group">
-                            <label>Stream Index (0-7):</label>
-                            <input type="number" class="form-control" id="vbanIndex" min="0" max="7" value="0">
-                        </div>
-            
-                        <div class="form-group">
-                            <label>IP Address:</label>
-                            <input type="text" class="form-control" id="vbanIP" placeholder="192.168.1.100">
-                        </div>
-            
-                        <div class="form-group">
-                            <label>Port:</label>
-                            <input type="number" class="form-control" id="vbanPort" min="1" max="65535" value="6980">
-                        </div>
-            
-                        <div class="form-group">
-                            <label>Stream Name:</label>
-                            <input type="text" class="form-control" id="vbanName" placeholder="Stream1">
-                        </div>
-            
-                        <button class="btn btn-secondary" onclick="addVBANCommand()">Add VBAN Command</button>
-                    </div>
+                <div class="row">
+                  <label>Option.buffer.wdm</label>
+                  <input type="number" id="optBufWdm" value="512" min="128" max="2048" step="64">
+                  <button class="mini ghost" data-insert="Option.buffer.wdm = {{VAL}};">Add</button>
                 </div>
-            </div>
+                <div class="row">
+                  <label>Option.mode.exclusif</label>
+                  <select id="optExcl"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="Option.mode.exclusif = {{VAL}};">Add</button>
+                </div>
+                <div class="row">
+                  <label>Option.mode.swift</label>
+                  <select id="optSwift"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="Option.mode.swift = {{VAL}};">Add</button>
+                </div>
+              </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn" onclick="generateCommand()">Generate Command</button>
-                <button class="btn btn-secondary" onclick="copyCommand()">Copy Command</button>
-                <button class="btn btn-danger" onclick="clearAll()">Clear All</button>
-            </div>
+              <div class="sys-card">
+                <h3>VBAN</h3>
+                <div class="row">
+                  <label>vban.Enable</label>
+                  <select id="vbanEnable"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="vban.Enable = {{VAL}};">Add</button>
+                </div>
+                <div class="row">
+                  <label>vban.outstream[0].name</label>
+                  <input type="text" id="vbanOutName" placeholder="e.g. SendA">
+                  <button class="mini ghost" data-insert='vban.outstream[0].name = "{{VAL}}";'>Add</button>
+                </div>
+                <div class="row">
+                  <label>vban.outstream[0].ip</label>
+                  <input type="text" id="vbanOutIp" placeholder="192.168.1.50">
+                  <button class="mini ghost" data-insert='vban.outstream[0].ip = "{{VAL}}";'>Add</button>
+                </div>
+                <div class="row">
+                  <label>vban.outstream[0].sr</label>
+                  <select id="vbanOutSr"><option>44100</option><option selected>48000</option><option>96000</option></select>
+                  <button class="mini ghost" data-insert="vban.outstream[0].sr = {{VAL}};">Add</button>
+                </div>
+              </div>
 
-            <div class="command-output" id="commandOutput">// Your command will appear here</div>
+              <div class="sys-card">
+                <h3>Recorder</h3>
+                <div class="row">
+                  <label>recorder.record</label>
+                  <select id="recRecord"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="recorder.record = {{VAL}};">Add</button>
+                </div>
+                <div class="row">
+                  <label>recorder.play</label>
+                  <select id="recPlay"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="recorder.play = {{VAL}};">Add</button>
+                </div>
+                <div class="row">
+                  <label>Recorder.FileType</label>
+                  <select id="recFileType"><option value="1">1=WAV</option><option value="100">100=MP3</option></select>
+                  <button class="mini ghost" data-insert="Recorder.FileType = {{VAL}};">Add</button>
+                </div>
+              </div>
+
+              <div class="sys-card">
+                <h3>Patch</h3>
+                <div class="row">
+                  <label>Patch.composite[0]</label>
+                  <input id="patchComposite0" type="number" value="0" min="0" max="22">
+                  <button class="mini ghost" data-insert="Patch.composite[0] = {{VAL}};">Add</button>
+                </div>
+                <div class="row">
+                  <label>Patch.insert[0]</label>
+                  <select id="patchInsert0"><option>0</option><option>1</option></select>
+                  <button class="mini ghost" data-insert="Patch.insert[0] = {{VAL}};">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <div class="help-section">
-        <button class="help-btn" onclick="toggleHelp()">?</button>
-        <div class="help-content" id="helpContent">
-            <h3 style="color: #4CAF50; margin-bottom: 10px;">Quick Help</h3>
-            <p style="font-size: 0.9em; line-height: 1.5;">
-                1. Select your Voicemeeter version<br>
-                2. Click on a strip or bus to select it<br>
-                3. Choose a parameter to control<br>
-                4. Set the value or use special commands<br>
-                5. Generate and copy your command<br><br>
-                <strong>Tips:</strong><br>
-                • Use += or -= for relative changes<br>
-                • Enable advanced features for sequences<br>
-                • Hover over elements for tooltips
-            </p>
+      <section class="right-pane">
+        <div class="panel no-title">
+          <pre id="finalPreview" class="preview huge"></pre>
         </div>
-    </div>
+      </section>
+    </main>
 
-    <div class="loading" id="loading">
-        <div class="loading-spinner"></div>
-    </div>
+  <dialog id="helpDialog">
+    <form method="dialog" class="help">
+      <div class="editor-header">
+        <h3 id="t-help-title">Help / How to Use</h3>
+        <button class="ghost" value="cancel" id="t-close">Close</button>
+      </div>
+      <div class="help-body">
+        <ol class="steps" id="t-help-steps">
+          <li>Choose Voicemeeter version. The left panel adapts to strip/bus counts and allowed options.</li>
+          <li>In Strips/Buses tabs, use the index dropdown (0..n-1) to show exactly ONE channel at a time. Edit values.</li>
+          <li>The right-hand preview outputs only changed items (no defaults).</li>
+          <li>Use Quick / System to append extra lines (Wait, Command.*, VBAN, Recorder...). They are merged into Final Output.</li>
+        </ol>
+      </div>
+    </form>
+  </dialog>
 
-    <script>
-        // Global variables
-        let currentVersion = 'standard';
-        let selectedTarget = null;
-        let selectedColor = 0;
-        let commandHistory = [];
-
-        // Version configurations
-        const versions = {
-            standard: {
-                strips: 3,
-                buses: 2,
-                name: 'Voicemeeter Standard'
-            },
-            banana: {
-                strips: 5,
-                buses: 5,
-                name: 'Voicemeeter Banana'
-            },
-            potato: {
-                strips: 8,
-                buses: 8,
-                name: 'Voicemeeter Potato'
-            }
-        };
-
-        // Parameter definitions
-        const stripParams = {
-            basic: [
-                { name: 'Mute', param: 'mute', type: 'toggle', min: 0, max: 1 },
-                { name: 'Solo', param: 'solo', type: 'toggle', min: 0, max: 1 },
-                { name: 'Mono', param: 'mono', type: 'toggle', min: 0, max: 1 },
-                { name: 'Gain', param: 'gain', type: 'range', min: -60, max: 12, unit: 'dB' },
-                { name: 'Pan X', param: 'pan_x', type: 'range', min: -0.5, max: 0.5 },
-                { name: 'Pan Y', param: 'pan_y', type: 'range', min: 0, max: 1 }
-            ],
-            physical: [
-                { name: 'Color X', param: 'color_x', type: 'range', min: -0.5, max: 0.5 },
-                { name: 'Color Y', param: 'color_y', type: 'range', min: 0, max: 1 }
-            ],
-            virtual: [
-                { name: 'EQ Gain 1', param: 'eqgain1', type: 'range', min: -12, max: 12, unit: 'dB' },
-                { name: 'EQ Gain 2', param: 'eqgain2', type: 'range', min: -12, max: 12, unit: 'dB' },
-                { name: 'EQ Gain 3', param: 'eqgain3', type: 'range', min: -12, max: 12, unit: 'dB' }
-            ],
-            banana: [
-                { name: 'Comp', param: 'comp', type: 'range', min: 0, max: 10 },
-                { name: 'Gate', param: 'gate', type: 'range', min: 0, max: 10 },
-                { name: 'Limit', param: 'limit', type: 'range', min: -40, max: 12, unit: 'dB' },
-                { name: 'Karaoke', param: 'karaoke', type: 'select', options: [0, 1, 2, 3, 4] }
-            ],
-            potato: [
-                { name: 'Denoiser', param: 'denoiser', type: 'range', min: 0, max: 10 },
-                { name: 'Reverb Send', param: 'reverb', type: 'range', min: 0, max: 10 },
-                { name: 'Delay Send', param: 'delay', type: 'range', min: 0, max: 10 },
-                { name: 'FX1 Send', param: 'fx1', type: 'range', min: 0, max: 10 },
-                { name: 'FX2 Send', param: 'fx2', type: 'range', min: 0, max: 10 }
-            ],
-            busAssign: [
-                { name: 'A1', param: 'A1', type: 'toggle', min: 0, max: 1 },
-                { name: 'A2', param: 'A2', type: 'toggle', min: 0, max: 1 },
-                { name: 'A3', param: 'A3', type: 'toggle', min: 0, max: 1 },
-                { name: 'A4', param: 'A4', type: 'toggle', min: 0, max: 1 },
-                { name: 'A5', param: 'A5', type: 'toggle', min: 0, max: 1 },
-                { name: 'B1', param: 'B1', type: 'toggle', min: 0, max: 1 },
-                { name: 'B2', param: 'B2', type: 'toggle', min: 0, max: 1 },
-                { name: 'B3', param: 'B3', type: 'toggle', min: 0, max: 1 }
-            ]
-        };
-
-        const busParams = {
-            basic: [
-                { name: 'Mute', param: 'mute', type: 'toggle', min: 0, max: 1 },
-                { name: 'Mono', param: 'mono', type: 'select', options: [0, 1, 2] },
-                { name: 'Gain', param: 'gain', type: 'range', min: -60, max: 12, unit: 'dB' },
-                { name: 'EQ On/Off', param: 'eq.on', type: 'toggle', min: 0, max: 1 }
-            ],
-            modes: [
-                { name: 'Normal Mode', param: 'mode.normal', type: 'toggle', min: 0, max: 1 },
-                { name: 'Amix Mode', param: 'mode.amix', type: 'toggle', min: 0, max: 1 },
-                { name: 'Repeat Mode', param: 'mode.repeat', type: 'toggle', min: 0, max: 1 },
-                { name: 'Composite Mode', param: 'mode.composite', type: 'toggle', min: 0, max: 1 }
-            ],
-            banana: [
-                { name: 'Bmix Mode', param: 'mode.bmix', type: 'toggle', min: 0, max: 1 },
-                { name: 'TV Mix Mode', param: 'mode.tvmix', type: 'toggle', min: 0, max: 1 },
-                { name: 'UpMix 2.1', param: 'mode.upmix21', type: 'toggle', min: 0, max: 1 },
-                { name: 'UpMix 4.1', param: 'mode.upmix41', type: 'toggle', min: 0, max: 1 },
-                { name: 'UpMix 6.1', param: 'mode.upmix61', type: 'toggle', min: 0, max: 1 }
-            ],
-            potato: [
-                { name: 'SEL', param: 'sel', type: 'toggle', min: 0, max: 1 },
-                { name: 'Return Reverb', param: 'returnreverb', type: 'range', min: 0, max: 10 },
-                { name: 'Return Delay', param: 'returndelay', type: 'range', min: 0, max: 10 },
-                { name: 'Return FX1', param: 'returnfx1', type: 'range', min: 0, max: 10 },
-                { name: 'Return FX2', param: 'returnfx2', type: 'range', min: 0, max: 10 }
-            ]
-        };
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            setupVersionButtons();
-            updateInterface();
-            loadFromStorage();
-        });
-
-        // Version selection
-        function setupVersionButtons() {
-            document.querySelectorAll('.version-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.version-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentVersion = this.dataset.version;
-                    updateInterface();
-                });
-            });
-        }
-
-        // Update interface based on version
-        function updateInterface() {
-            const config = versions[currentVersion];
-            updateStrips(config.strips);
-            updateBuses(config.buses);
-            updateSelects();
-        }
-
-        // Generate strips
-        function updateStrips(count) {
-            const container = document.getElementById('stripsContainer');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < count; i++) {
-                const isPhysical = i < (currentVersion === 'standard' ? 2 : 3);
-                const strip = createStrip(i, isPhysical);
-                container.appendChild(strip);
-            }
-        }
-
-        // Generate buses
-        function updateBuses(count) {
-            const container = document.getElementById('busesContainer');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < count; i++) {
-                const isPhysical = i < (currentVersion === 'standard' ? 2 : 3);
-                const bus = createBus(i, isPhysical);
-                container.appendChild(bus);
-            }
-        }
-
-        // Create strip element
-        function createStrip(index, isPhysical) {
-            const strip = document.createElement('div');
-            strip.className = 'strip fade-in';
-            strip.dataset.index = index;
-            strip.dataset.type = 'strip';
-            strip.onclick = () => selectElement(strip);
-            
-            strip.innerHTML = `
-                <div class="strip-name">Strip ${index + 1}</div>
-                <div class="control">
-                    <span class="control-label">Type:</span>
-                    <span class="control-value">${isPhysical ? 'Hardware' : 'Virtual'}</span>
-                </div>
-                <div class="fader" data-param="gain" data-index="${index}">
-                    <div class="fader-track"></div>
-                    <div class="fader-handle" style="top: 50%"></div>
-                </div>
-                <div class="control">
-                    <span class="control-label">Gain:</span>
-                    <span class="control-value">0.0 dB</span>
-                </div>
-            `;
-            
-            // Add drag functionality to fader
-            const faderHandle = strip.querySelector('.fader-handle');
-            let isDragging = false;
-            
-            faderHandle.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                e.preventDefault();
-            });
-            
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    const fader = faderHandle.parentElement;
-                    const rect = fader.getBoundingClientRect();
-                    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
-                    const percent = y / rect.height;
-                    faderHandle.style.top = y + 'px';
-                    
-                    // Update gain value
-                    const gain = Math.round((1 - percent) * 72 - 60);
-                    strip.querySelector('.control-value').textContent = gain + ' dB';
-                }
-            });
-            
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-            
-            return strip;
-        }
-
-        // Create bus element
-        function createBus(index, isPhysical) {
-            const bus = document.createElement('div');
-            bus.className = 'bus fade-in';
-            bus.dataset.index = index;
-            bus.dataset.type = 'bus';
-            bus.onclick = () => selectElement(bus);
-            
-            const busNames = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3'];
-            
-            bus.innerHTML = `
-                <div class="bus-name">${busNames[index] || 'Bus ' + (index + 1)}</div>
-                <div class="control">
-                    <span class="control-label">Type:</span>
-                    <span class="control-value">${isPhysical ? 'Physical' : 'Virtual'}</span>
-                </div>
-                <div class="fader" data-param="gain" data-index="${index}">
-                    <div class="fader-track"></div>
-                    <div class="fader-handle" style="top: 50%"></div>
-                </div>
-                <div class="control">
-                    <span class="control-label">Gain:</span>
-                    <span class="control-value">0.0 dB</span>
-                </div>
-            `;
-            
-            return bus;
-        }
-
-        // Select element
-        function selectElement(element) {
-            document.querySelectorAll('.strip, .bus').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedTarget = {
-                type: element.dataset.type,
-                index: parseInt(element.dataset.index)
-            };
-            updateTargetSelect();
-            updateParamSelect();
-        }
-
-        // Update target select
-        function updateTargetSelect() {
-            const select = document.getElementById('targetSelect');
-            if (selectedTarget) {
-                select.value = `${selectedTarget.type}_${selectedTarget.index}`;
-            }
-        }
-
-        // Update selects
-        function updateSelects() {
-            const targetSelect = document.getElementById('targetSelect');
-            const stripOptions = document.getElementById('stripOptions');
-            const busOptions = document.getElementById('busOptions');
-            
-            stripOptions.innerHTML = '';
-            busOptions.innerHTML = '';
-            
-            const config = versions[currentVersion];
-            
-            // Add strips
-            for (let i = 0; i < config.strips; i++) {
-                const option = document.createElement('option');
-                option.value = `strip_${i}`;
-                option.textContent = `Strip ${i + 1}`;
-                stripOptions.appendChild(option);
-            }
-            
-            // Add buses
-            const busNames = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3'];
-            for (let i = 0; i < config.buses; i++) {
-                const option = document.createElement('option');
-                option.value = `bus_${i}`;
-                option.textContent = busNames[i] || `Bus ${i + 1}`;
-                busOptions.appendChild(option);
-            }
-        }
-
-        // Update target from select
-        function updateTarget() {
-            const select = document.getElementById('targetSelect');
-            const value = select.value;
-            
-            if (value) {
-                const [type, index] = value.split('_');
-                selectedTarget = {
-                    type: type,
-                    index: parseInt(index)
-                };
-                
-                // Update visual selection
-                document.querySelectorAll('.strip, .bus').forEach(el => el.classList.remove('selected'));
-                const element = document.querySelector(`.${type}[data-index="${index}"]`);
-                if (element) element.classList.add('selected');
-                
-                updateParamSelect();
-            }
-        }
-
-        // Update parameter select
-        function updateParamSelect() {
-            const select = document.getElementById('paramSelect');
-            select.innerHTML = '<option value="">Select Parameter</option>';
-            
-            if (!selectedTarget) return;
-            
-            let params = [];
-            
-            if (selectedTarget.type === 'strip') {
-                params = [...stripParams.basic];
-                
-                // Add version-specific params
-                if (currentVersion === 'banana' || currentVersion === 'potato') {
-                    params.push(...stripParams.banana);
-                }
-                if (currentVersion === 'potato') {
-                    params.push(...stripParams.potato);
-                }
-                
-                // Add bus assignments based on version
-                const config = versions[currentVersion];
-                const busAssigns = stripParams.busAssign.slice(0, config.buses);
-                params.push(...busAssigns);
-                
-                // Add virtual/physical specific params
-                const isPhysical = selectedTarget.index < (currentVersion === 'standard' ? 2 : 3);
-                if (isPhysical) {
-                    params.push(...stripParams.physical);
-                } else {
-                    params.push(...stripParams.virtual);
-                }
-            } else {
-                params = [...busParams.basic];
-                params.push(...busParams.modes);
-                
-                if (currentVersion === 'banana' || currentVersion === 'potato') {
-                    params.push(...busParams.banana);
-                }
-                if (currentVersion === 'potato') {
-                    params.push(...busParams.potato);
-                }
-            }
-            
-            // Group parameters
-            const groups = {
-                'Basic': [],
-                'EQ': [],
-                'Effects': [],
-                'Bus Assignment': [],
-                'Modes': [],
-                'Advanced': []
-            };
-            
-            params.forEach(param => {
-                let group = 'Basic';
-                if (param.param.includes('eq')) group = 'EQ';
-                else if (['comp', 'gate', 'limit', 'karaoke', 'denoiser', 'reverb', 'delay', 'fx1', 'fx2'].includes(param.param)) group = 'Effects';
-                else if (param.param.match(/^[AB]\d$/)) group = 'Bus Assignment';
-                else if (param.param.includes('mode')) group = 'Modes';
-                else if (['color_x', 'color_y', 'pan_x', 'pan_y'].includes(param.param)) group = 'Advanced';
-                
-                groups[group].push(param);
-            });
-            
-            // Add grouped options
-            Object.entries(groups).forEach(([groupName, groupParams]) => {
-                if (groupParams.length > 0) {
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = groupName;
-                    
-                    groupParams.forEach(param => {
-                        const option = document.createElement('option');
-                        option.value = JSON.stringify(param);
-                        option.textContent = param.name;
-                        optgroup.appendChild(option);
-                    });
-                    
-                    select.appendChild(optgroup);
-                }
-            });
-        }
-
-        // Update parameter selection
-        function updateParam() {
-            const select = document.getElementById('paramSelect');
-            const valueGroup = document.getElementById('valueGroup');
-            const valueInput = document.getElementById('valueInput');
-            const rangeInput = document.getElementById('rangeInput');
-            const valueLabel = document.getElementById('valueLabel');
-            
-            if (!select.value) {
-                valueGroup.style.display = 'none';
-                return;
-            }
-            
-            const param = JSON.parse(select.value);
-            valueGroup.style.display = 'block';
-            
-            // Configure input based on type
-            switch (param.type) {
-                case 'toggle':
-                    valueInput.style.display = 'none';
-                    rangeInput.style.display = 'block';
-                    rangeInput.min = param.min;
-                    rangeInput.max = param.max;
-                    rangeInput.step = 1;
-                    rangeInput.value = 0;
-                    valueLabel.textContent = 'Toggle:';
-                    updateRangeValue();
-                    break;
-                    
-                case 'range':
-                    valueInput.style.display = 'none';
-                    rangeInput.style.display = 'block';
-                    rangeInput.min = param.min;
-                    rangeInput.max = param.max;
-                    rangeInput.step = param.min < 0 ? 0.1 : 1;
-                    rangeInput.value = 0;
-                    valueLabel.textContent = `Value${param.unit ? ' (' + param.unit + ')' : ''}:`;
-                    updateRangeValue();
-                    break;
-                    
-                case 'select':
-                    valueInput.style.display = 'block';
-                    rangeInput.style.display = 'none';
-                    valueInput.placeholder = `Options: ${param.options.join(', ')}`;
-                    valueLabel.textContent = 'Value:';
-                    break;
-                    
-                default:
-                    valueInput.style.display = 'block';
-                    rangeInput.style.display = 'none';
-                    valueInput.placeholder = 'Enter value';
-                    valueLabel.textContent = 'Value:';
-            }
-            
-            updateCommand();
-        }
-
-        // Update range value display
-        function updateRangeValue() {
-            const rangeInput = document.getElementById('rangeInput');
-            const rangeValue = document.getElementById('rangeValue');
-            const select = document.getElementById('paramSelect');
-            
-            if (select.value) {
-                const param = JSON.parse(select.value);
-                
-                if (param.type === 'toggle') {
-                    rangeValue.textContent = rangeInput.value === '1' ? 'ON' : 'OFF';
-                } else {
-                    rangeValue.textContent = rangeInput.value + (param.unit || '');
-                }
-                
-                updateCommand();
-            }
-        }
-
-        // Generate command
-        function generateCommand() {
-            const output = document.getElementById('commandOutput');
-            let command = '';
-            
-            if (selectedTarget) {
-                const targetStr = selectedTarget.type.charAt(0).toUpperCase() + selectedTarget.type.slice(1);
-                const paramSelect = document.getElementById('paramSelect');
-                
-                if (paramSelect.value) {
-                    const param = JSON.parse(paramSelect.value);
-                    let value = '';
-                    
-                    if (param.type === 'toggle' || param.type === 'range') {
-                        value = document.getElementById('rangeInput').value;
-                    } else {
-                        value = document.getElementById('valueInput').value;
-                    }
-                    
-                    if (value !== '') {
-                        command = `${targetStr}(${selectedTarget.index}).${param.param} = ${value};`;
-                        
-                        // Add comments for clarity
-                        if (param.type === 'toggle') {
-                            command += ` // ${value === '1' ? 'Enable' : 'Disable'} ${param.name}`;
-                        } else if (param.unit) {
-                            command += ` // Set ${param.name} to ${value} ${param.unit}`;
-                        }
-                    }
-                }
-            }
-            
-            // Check for special commands
-            const specialCommand = document.getElementById('specialCommand').value;
-            if (specialCommand) {
-                switch (specialCommand) {
-                    case 'load':
-                    case 'save':
-                        const filePath = document.getElementById('filePath').value;
-                        if (filePath) {
-                            command = `Command.${specialCommand.charAt(0).toUpperCase() + specialCommand.slice(1)} = "${filePath}";`;
-                        }
-                        break;
-                    default:
-                        command = `Command.${specialCommand.charAt(0).toUpperCase() + specialCommand.slice(1)} = 1;`;
-                }
-            }
-            
-            // Add button configuration if specified
-            const buttonId = document.getElementById('buttonId').value;
-            if (buttonId && selectedColor > 0) {
-                command += `\nCommand.Button[${buttonId}].Color = ${selectedColor};`;
-            }
-            
-            if (document.getElementById('triggerEnabled').checked) {
-                command += `\nButton(${buttonId}).Trigger = 1; // Enable audio trigger`;
-            }
-            
-            // Add sequence commands if any
-            const sequenceText = document.getElementById('sequenceText').value;
-            if (sequenceText) {
-                command = sequenceText + '\n' + command;
-            }
-            
-            output.textContent = command || '// No command generated';
-            output.classList.add('glow');
-            setTimeout(() => output.classList.remove('glow'), 1000);
-            
-            // Save to history
-            if (command) {
-                commandHistory.push(command);
-                saveToStorage();
-            }
-        }
-
-        // Update command in real-time
-        function updateCommand() {
-            generateCommand();
-        }
-
-        // Copy command to clipboard
-        function copyCommand() {
-            const output = document.getElementById('commandOutput');
-            const text = output.textContent;
-            
-            if (text && text !== '// No command generated') {
-                navigator.clipboard.writeText(text).then(() => {
-                    showNotification('Command copied to clipboard!');
-                }).catch(err => {
-                    console.error('Failed to copy:', err);
-                });
-            }
-        }
-
-        // Clear all inputs
-        function clearAll() {
-            document.getElementById('targetSelect').value = '';
-            document.getElementById('paramSelect').value = '';
-            document.getElementById('valueInput').value = '';
-            document.getElementById('rangeInput').value = '0';
-            document.getElementById('specialCommand').value = '';
-            document.getElementById('filePath').value = '';
-            document.getElementById('sequenceText').value = '';
-            document.getElementById('commandOutput').textContent = '// Your command will appear here';
-            selectedTarget = null;
-            selectedColor = 0;
-            
-            document.querySelectorAll('.strip, .bus').forEach(el => el.classList.remove('selected'));
-            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
-            
-            saveToStorage();
-        }
-
-        // Quick actions
-        function quickAction(action) {
-            let command = '';
-            
-            switch (action) {
-                case 'muteAll':
-                    const config = versions[currentVersion];
-                    for (let i = 0; i < config.strips; i++) {
-                        command += `Strip(${i}).mute = 1;\n`;
-                    }
-                    break;
-                    
-                case 'unmuteAll':
-                    const config2 = versions[currentVersion];
-                    for (let i = 0; i < config2.strips; i++) {
-                        command += `Strip(${i}).mute = 0;\n`;
-                    }
-                    break;
-                    
-                case 'resetGains':
-                    const config3 = versions[currentVersion];
-                    for (let i = 0; i < config3.strips; i++) {
-                        command += `Strip(${i}).gain = 0.0;\n`;
-                    }
-                    for (let i = 0; i < config3.buses; i++) {
-                        command += `Bus(${i}).gain = 0.0;\n`;
-                    }
-                    break;
-                    
-                case 'restart':
-                    command = 'Command.Restart = 1;';
-                    break;
-            }
-            
-            document.getElementById('commandOutput').textContent = command;
-            showNotification(`Quick action: ${action} generated!`);
-        }
-
-        // Toggle help
-        function toggleHelp() {
-            const helpContent = document.getElementById('helpContent');
-            helpContent.classList.toggle('show');
-        }
-
-        // Show notification
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #4CAF50;
-                color: white;
-                padding: 15px 20px;
-                border-radius: 4px;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-                z-index: 1000;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'fadeOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // Save to localStorage
-        function saveToStorage() {
-            const data = {
-                version: currentVersion,
-                selectedTarget: selectedTarget,
-                selectedColor: selectedColor,
-                commandHistory: commandHistory.slice(-10) // Keep last 10 commands
-            };
-            localStorage.setItem('voicemeeterConfig', JSON.stringify(data));
-        }
-
-        // Load from localStorage
-        function loadFromStorage() {
-            const saved = localStorage.getItem('voicemeeterConfig');
-            if (saved) {
-                const data = JSON.parse(saved);
-                if (data.version) {
-                    currentVersion = data.version;
-                    document.querySelectorAll('.version-btn').forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.version === currentVersion);
-                    });
-                }
-                if (data.selectedTarget) {
-                    selectedTarget = data.selectedTarget;
-                }
-                if (data.selectedColor) {
-                    selectedColor = data.selectedColor;
-                    selectColor(selectedColor);
-                }
-                if (data.commandHistory) {
-                    commandHistory = data.commandHistory;
-                }
-                updateInterface();
-            }
-        }
-
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+C to copy command
-            if (e.ctrlKey && e.key === 'c' && !window.getSelection().toString()) {
-                e.preventDefault();
-                copyCommand();
-            }
-            
-            // Ctrl+G to generate command
-            if (e.ctrlKey && e.key === 'g') {
-                e.preventDefault();
-                generateCommand();
-            }
-            
-            // Escape to clear selection
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.strip, .bus').forEach(el => el.classList.remove('selected'));
-                selectedTarget = null;
-                updateTargetSelect();
-            }
-        });
-
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Monitor for dark mode preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('dark-mode');
-        }
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            document.body.classList.toggle('dark-mode', event.matches);
-        });
- 
-        //parameter group
-        function toggleGroup(element) {
-            element.parentElement.classList.toggle('collapsed');
-        }
-
-        // Select button color
-        function selectColor(colorNum) {
-            selectedColor = colorNum;
-            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
-            document.querySelector(`.color-btn[data-color="${colorNum}"]`).classList.add('selected');
-            updateCommand();
-        }
-
-        // Update special command
-        function updateSpecialCommand() {
-            const command = document.getElementById('specialCommand').value;
-            const filePathGroup = document.getElementById('filePathGroup');
-            
-            if (command === 'load' || command === 'save') {
-                filePathGroup.style.display = 'block';
-            } else {
-                filePathGroup.style.display = 'none';
-            }
-            
-            updateCommand();
-        }
-
-        // Toggle advanced features
-        function toggleAdvanced() {
-            const toggle = document.getElementById('advancedToggle');
-            const features = document.getElementById('advancedFeatures');
-            
-            toggle.classList.toggle('active');
-            features.classList.toggle('show');
-        }
-
-        // Add wait command
-        function addWaitCommand() {
-            const waitTime = document.getElementById('waitTime').value;
-            const sequenceText = document.getElementById('sequenceText');
-            
-            if (waitTime) {
-                sequenceText.value += `Wait(${waitTime});\n`;
-                document.getElementById('waitTime').value = '';
-                updateCommand();
-            }
-        }
-
-        // Add VBAN command
-        function addVBANCommand() {
-            const type = document.getElementById('vbanType').value;
-            const index = document.getElementById('vbanIndex').value;
-            const ip = document.getElementById('vbanIP').value;
-            const port = document.getElementById('vbanPort').value;
-            const name = document.getElementById('vbanName').value;
-            
-            let command = '';
-            
-            if (ip) command += `vban.${type}[${index}].ip = "${ip}";\n`;
-            if (port) command += `vban.${type}[${index}].port = ${port};\n`;
-            if (name) command += `vban.${type}[${index}].name = "${name}";\n`;
-            command += `vban.${type}[${index}].on = 1;\n`;
-            
-            document.getElementById('sequenceText').value += command;
-            updateCommand();
-        }
-        </script>
+  <script src="app.js"></script>
 </body>
 </html>

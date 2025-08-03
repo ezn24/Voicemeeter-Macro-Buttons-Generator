@@ -1,0 +1,138 @@
+/* Single-view layout, tri-state controls, real-time preview, i18n */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Noto Sans TC, Helvetica, Arial;
+  background: radial-gradient(1000px 600px at 10% -10%, #2a3a34 0%, #1a1f1d 40%, #111 100%) fixed;
+  color: #e5efe9;
+}
+:root {
+  --panel: #171b1a;
+  --panel-2: #1f2523;
+  --btn: #24312c;
+  --btn-hover: #2f3e38;
+  --shadow: 0 6px 20px rgba(0,0,0,.35);
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(36,45,42,.7), rgba(23,27,26,.7));
+  position: sticky; top: 0; z-index: 10; backdrop-filter: blur(6px);
+  border-bottom: 1px solid #2f3835;
+}
+.brand { display: flex; gap: 12px; align-items: center; }
+.logo { font-size: 28px; }
+.titles h1 { margin: 0; font-weight: 700; font-size: 18px; letter-spacing: .4px;}
+.subtitle { font-size: 12px; color: #9bb8ad; }
+.controls { display: flex; gap: 8px; align-items: center; }
+.select, input[type=number], input[type=text], select, textarea {
+  padding: 8px 10px; border-radius: 10px; border: 1px solid #2f3a36; background: #0f1312; color: #dff3ea;
+  outline: none;
+  margin-left: 30;
+}
+button {
+  border: 1px solid #2a3430; background: var(--btn); color: #dff3ea; padding: 8px 12px; border-radius: 10px; cursor: pointer;
+  box-shadow: var(--shadow); transition: .15s;
+}
+button:hover { background: var(--btn-hover); }
+button.primary { border-color: #2d704f; background: linear-gradient(180deg, #164e36, #103b2a); }
+button.primary:hover { background: linear-gradient(180deg, #1a5a40, #134530); }
+button.danger { border-color: #6b2323; background: linear-gradient(180deg, #642323, #4b1b1b); }
+button.ghost { background: transparent; border-color: #2f3935; }
+button.mini { padding: 6px 8px; border-radius: 8px; font-size: 12px; }
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.content {
+  display: grid;
+  grid-template-columns: 560px 980px; /* 左 560px，右預覽固定 980px（可改） */
+  gap: 14px;
+  padding: 14px;
+  max-width: none;      /* 取消 1400px 限制，避免卡寬 */
+  width: auto;
+  margin: 0 auto;
+}
+
+
+.left-pane .panel, .right-pane .panel {
+  background: var(--panel); border: 1px solid #2a3430; border-radius: 16px; box-shadow: var(--shadow); padding: 12px;
+}
+.panel-title { font-weight: 700; letter-spacing: .5px; color: #c6ffdd; margin-bottom: 6px; }
+.panel-subtitle { color: #99b8ac; font-size: 12px; margin-bottom: 8px; }
+
+.tabs { display: flex; gap: 6px; margin: 8px 0 12px; }
+.tab {
+  padding: 8px 10px; border-radius: 10px; background: var(--panel-2); border: 1px solid #29403a; color: #bfe3d3;
+}
+.tab.active { outline: 2px solid #3c6758; color: #fff; }
+.tabpane { display: none; }
+.tabpane.active { display: block; }
+
+.selector-row { display: grid; grid-template-columns: 160px 1fr; gap: 8px; align-items: center; margin: 6px 0 12px; }
+.selector-row label { font-size: 12px; color: #a1c4b6; }
+
+.strip, .bus {
+  background: linear-gradient(180deg, #121816, #0b0e0d);
+  border: 1px solid #1f2a25; border-radius: 16px; padding: 10px; min-height: 280px; position: relative;
+}
+.strip .hdr, .bus .hdr { display: flex; justify-content: space-between; font-weight: 700; color: #a8d6c3; }
+.strip .section, .bus .section { margin-top: 10px; border-top: 1px dashed #2d3834; padding-top: 8px; }
+.badge { padding: 2px 6px; border-radius: 999px; background: #173a2a; border: 1px solid #2a6f51; color: #b9f7da; font-size: 12px; }
+
+.range-col { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.vert-range { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 26px; height: 140px; }
+.small { font-size: 12px; color: #a5c7b9; }
+.small .mini { margin-left: 6px; }
+
+.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kv label { font-size: 12px; color: #a5c7b9; }
+.kv select { width: 100%; }
+
+.preview {
+  background: #0c100f; border: 1px solid #222b27; border-radius: 10px; padding: 10px;
+  color: #b8e8d3; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;           /* 保留換行字元 */
+  word-break: normal;              /* 不要到處硬切字 */
+  overflow-wrap: anywhere;         /* 超長 token 才換行 */
+  min-height: 40px;
+}
+.preview.huge {
+  height: 560px;                  /* 固定高度，避免整個版面被撐高 */
+  overflow: auto;                  /* 超出就捲動 */
+}
+
+
+.footer { color: #7aa693; font-size: 12px; padding: 12px 16px; display: flex; gap: 10px; justify-content: center; }
+
+@media (max-width: 1000px) {
+  .content { grid-template-columns: 1fr; }
+}
+
+.left-pane .panel, .right-pane .panel {
+  min-height: 520px;   /* 依你的需求調整數值 */
+}
+
+/* 只對 Mono/Mute/Solo/MC & Bus Mono/Mute/EQ 做對齊處理 */
+.strip .tri-rows .row,
+.bus  .tri-rows .row {
+  display: grid;
+  grid-template-columns: 120px 1fr; /* 左：標籤，右：選單（依你現有的 120px 可調） */
+  align-items: center;
+  gap: 8px;
+}
+
+/* 標籤與選單內容都靠左 */
+.strip .tri-rows label,
+.bus  .tri-rows label {
+  justify-self: start;
+  text-align: left;
+}
+
+.strip .tri-rows select,
+.bus  .tri-rows select {
+  width: 100%;          /* 讓選單吃滿右欄，左邊齊線 */
+  text-align: left;     /* 顯示內容靠左 */
+  text-align-last: left;/* 部分瀏覽器用這個控制已選項的對齊 */
+}
