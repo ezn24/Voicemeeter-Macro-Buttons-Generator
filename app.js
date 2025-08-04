@@ -9,7 +9,7 @@ const VERSIONS = {
 // i18n
 const LANG = {
   en: {
-    title: "Voicemeeter Command Generator",
+    title: "Voicemeeter Macro Buttons Command Generator",
     versionLabel: "Version:",
     langLabel: "Language:",
     copy: "Copy",
@@ -47,7 +47,7 @@ const LANG = {
     footerNote: "This tool generates Remote/MacroButtons commands only; it does not directly control Voicemeeter.",
   },
   zh: {
-    title: "Voicemeeter 指令產生器",
+    title: "Voicemeeter Macro Buttons 指令生成器",
     versionLabel: "版本：",
     langLabel: "語言：",
     copy: "複製",
