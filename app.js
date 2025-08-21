@@ -10,6 +10,7 @@ const VERSIONS = {
 const LANG = {
   en: {
     title: "Voicemeeter Macro Buttons Command Generator",
+    subtitle: "Single-view, tri-state menus, real-time command preview/exports with language switch",
     versionLabel: "Version:",
     langLabel: "Language:",
     copy: "Copy",
@@ -44,10 +45,11 @@ const LANG = {
       "The right-hand preview outputs only changed items (no defaults).",
       "Use Quick / System to append extra lines (Wait, Command.*, VBAN, Recorder...). They are merged into Final Output."
     ],
-    footerNote: "This tool generates Remote/MacroButtons commands only; it does not directly control Voicemeeter.",
+    "footer-note": "This tool generates Remote/MacroButtons commands only; it does not directly control Voicemeeter.",
   },
   zh: {
     title: "Voicemeeter Macro Buttons 指令生成器",
+    subtitle: "單頁視圖、三態選單、即時預覽與匯出，支援語言切換",
     versionLabel: "版本：",
     langLabel: "語言：",
     copy: "複製",
@@ -82,7 +84,7 @@ const LANG = {
       "右側即時預覽只會輸出你有設定的項目（不會出現未變更值）。",
       "需要 Wait、Command.*、VBAN、Recorder 等，請在相應分頁按加入，會合併到最終輸出。"
     ],
-    footerNote: "此工具只會產生 Remote/MacroButtons 指令，不會直接控制 Voicemeeter。",
+    "footer-note": "此工具只會產生 Remote/MacroButtons 指令，不會直接控制 Voicemeeter。",
   }
 };
 
@@ -105,47 +107,57 @@ function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel))
 function t(key){ return LANG[uiLang][key]; }
 
 function i18nStaticTexts() {
-  $("#t-title").textContent = t("title");
-  $("#t-subtitle").textContent = t("subtitle");
-  $("#t-version-label").textContent = t("versionLabel");
-  $("#t-lang-label").textContent = t("langLabel");
-  $("#copyBtn").textContent = t("copy");
-  $("#resetBtn").textContent = t("resetAll");
-  $("#helpBtn").textContent = t("help");
-  $("#t-panel-title").textContent = t("panelTitle");
-  $("#t-tab-strips").textContent = t("tabStrips");
-  $("#t-tab-buses").textContent = t("tabBuses");
-  $("#t-tab-quick").textContent = t("tabQuick");
-  $("#t-tab-system").textContent = t("tabSystem");
-  $("#t-select-strip").textContent = t("selectStrip");
-  $("#t-select-bus").textContent = t("selectBus");
-  $("#t-footer-note").textContent = t("footerNote");
-  $("#t-help-title").textContent = t("helpTitle");
-  $("#t-close").textContent = t("close");
-  const steps = LANG[uiLang].helpSteps.map(s => `<li>${s}</li>`).join("");
-  $("#t-help-steps").innerHTML = steps;
+  const set = (sel, key) => { const el = $(sel); if (el) el.textContent = t(key); };
+  const setPlain = (sel, text) => { const el = $(sel); if (el) el.textContent = text; };
+
+  [
+    ["#t-title", "title"],
+    ["#t-subtitle", "subtitle"],
+    ["#t-version-label", "versionLabel"],
+    ["#t-lang-label", "langLabel"],
+    ["#copyBtn", "copy"],
+    ["#resetBtn", "resetAll"],
+    ["#helpBtn", "help"],
+    ["#t-panel-title", "panelTitle"],
+    ["#t-tab-strips", "tabStrips"],
+    ["#t-tab-buses", "tabBuses"],
+    ["#t-tab-quick", "tabQuick"],
+    ["#t-tab-system", "tabSystem"],
+    ["#t-select-strip", "selectStrip"],
+    ["#t-select-bus", "selectBus"],
+    ["#t-footer-note", "footer-note"],
+    ["#t-help-title", "helpTitle"],
+    ["#t-close", "close"],
+  ].forEach(([sel, key]) => set(sel, key));
+
+  const stepsEl = $("#t-help-steps");
+  if (stepsEl) {
+    const steps = LANG[uiLang].helpSteps.map(s => `<li>${s}</li>`).join("");
+    stepsEl.innerHTML = steps;
+  }
+
   // Quick panel labels
-  $("#t-q-mute-title").textContent = uiLang==="en"?"Mute / Unmute / Toggle":"靜音 / 解除靜音 / 切換";
-  $("#t-q-strip-index").textContent = uiLang==="en"?"Strip Index":"Strip 索引";
-  $("#t-q-action").textContent = uiLang==="en"?"Action":"操作";
-  $("#qcMuteAdd").textContent = t("add");
-  $("#t-q-gain-title").textContent = uiLang==="en"?"Strip Gain / Fade":"Strip 增益 / 漸變";
-  $("#t-q-strip-index-2").textContent = uiLang==="en"?"Strip Index":"Strip 索引";
-  $("#t-q-gain-db").textContent = uiLang==="en"?"Target Gain (dB)":"目標增益 (dB)";
-  $("#t-q-gain-ms").textContent = uiLang==="en"?"Fade Time (ms)":"漸變時間 (ms)";
-  $("#qcGainAdd").textContent = t("add");
-  $("#t-q-assign-title").textContent = uiLang==="en"?"Assign to Bus (A1..A5 / B1..B3)":"指派到 Bus（A1..A5 / B1..B3）";
-  $("#t-q-strip-index-3").textContent = uiLang==="en"?"Strip Index":"Strip 索引";
-  $("#t-q-target").textContent = uiLang==="en"?"Target":"目標";
-  $("#t-q-value").textContent = uiLang==="en"?"Value":"值";
-  $("#qcAssignAdd").textContent = t("add");
-  $("#t-q-cmd-title").textContent = uiLang==="en"?"Special Commands (Command.*)":"特殊命令（Command.*）";
-  $("#t-q-cmd").textContent = "Command";
-  $("#t-q-valpath").textContent = uiLang==="en"?"Value / Path":"值 / 路徑";
-  $("#qcCmdAdd").textContent = t("add");
-  $("#t-q-wait-title").textContent = uiLang==="en"?"Wait Sequence (ms)":"Wait 序列（毫秒）";
-  $("#t-q-wait").textContent = uiLang==="en"?"Wait Time":"等待時間";
-  $("#qcWaitAdd").textContent = t("add");
+  setPlain("#t-q-mute-title", uiLang==="en"?"Mute / Unmute / Toggle":"靜音 / 解除靜音 / 切換");
+  setPlain("#t-q-strip-index", uiLang==="en"?"Strip Index":"Strip 索引");
+  setPlain("#t-q-action", uiLang==="en"?"Action":"操作");
+  set("#qcMuteAdd", "add");
+  setPlain("#t-q-gain-title", uiLang==="en"?"Strip Gain / Fade":"Strip 增益 / 漸變");
+  setPlain("#t-q-strip-index-2", uiLang==="en"?"Strip Index":"Strip 索引");
+  setPlain("#t-q-gain-db", uiLang==="en"?"Target Gain (dB)":"目標增益 (dB)");
+  setPlain("#t-q-gain-ms", uiLang==="en"?"Fade Time (ms)":"漸變時間 (ms)");
+  set("#qcGainAdd", "add");
+  setPlain("#t-q-assign-title", uiLang==="en"?"Assign to Bus (A1..A5 / B1..B3)":"指派到 Bus（A1..A5 / B1..B3）");
+  setPlain("#t-q-strip-index-3", uiLang==="en"?"Strip Index":"Strip 索引");
+  setPlain("#t-q-target", uiLang==="en"?"Target":"目標");
+  setPlain("#t-q-value", uiLang==="en"?"Value":"值");
+  set("#qcAssignAdd", "add");
+  setPlain("#t-q-cmd-title", uiLang==="en"?"Special Commands (Command.*)":"特殊命令（Command.*）");
+  setPlain("#t-q-cmd", "Command");
+  setPlain("#t-q-valpath", uiLang==="en"?"Value / Path":"值 / 路徑");
+  set("#qcCmdAdd", "add");
+  setPlain("#t-q-wait-title", uiLang==="en"?"Wait Sequence (ms)":"Wait 序列（毫秒）");
+  setPlain("#t-q-wait", uiLang==="en"?"Wait Time":"等待時間");
+  set("#qcWaitAdd", "add");
 }
 
 function setPanelSubtitle() {
