@@ -1,4 +1,7 @@
-## [English](./README_EN.md) [中文](./README.md)
+# A Web interface project to generate Voicemeeter Macro Buttons command
 
-## A Web interface project to generate Voicemeeter Macro Buttons command
-### Github Page: [link](https://zh1030283726.github.io/Voicemeeter-Macro-Buttons-Generator/)
+## [English](./README_EN.md) / [中文](./README.md)
+
+Github Page: [link](https://zh1030283726.github.io/Voicemeeter-Macro-Buttons-Generator/)
+
+Tuitorial： [YouTUbe](https://youtu.be/B8kRta6-ib4?si=_DuOk9B41lF5vjVM)
